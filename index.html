@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Music Venue Closures Due to Covid-19 Pandemic</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.0/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.14.0/css/all.css">
+    <style>
+        html, body,
+
+        #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background: #0000000; }
+
+        .legend {
+            line-height: 40px;
+            font-size: 16px;
+            font-family: 'Helvetica', sans-serif;
+            width: 190px;
+            color: #ffffff;
+            padding: 8px 20px;
+            background: grey;
+            background: rgba(18,17,17,0.9);
+            box-shadow: 0 0 15px rgba(100,100,100,0.2);
+            border-radius: 5px;
+        }
+
+        .legend i {
+            width: 20px;
+            height: 20px;
+            float: left;
+            margin-right: 8px;
+            opacity: 1;
+        }
+
+        .legend img {
+            width: 20px;
+            height: 8px;
+            margin-right: 10px;
+            float: left;
+        }
+
+        .legend p {
+            font-size: 14px;
+            line-height: 25px;
+            margin: 0;
+        }
+
+        body {
+          margin:0;
+          padding:0;
+          font-family:
+          sans-serif;
+          }
+
+        h1 {
+          position: absolute;
+          left: 50px;
+          top: 10px;
+          padding: 8px 2%;
+          margin: 0;
+          background: ;
+          box-shadow: 0 0 15px rgba(0,0,0,0.2);
+          border-radius: 3px;
+          color: whitesmoke;
+          font-size: 1em;
+          z-index: 800;
+        }
+
+          section {
+      			position: absolute;
+      			bottom: 0;
+      			left: 10px;
+      			width: 250px;
+            color: #7b7b7b;
+      			margin: 20px auto;
+      			padding: 0 15px;
+      			background: rgba(18,17,17,0.9);
+      			border-radius: 3px;
+      			z-index: 800;
+      		}
+
+      		p {
+      			font-size: .9em;
+      			line-height: 1.5em;
+      		}
+
+      		a {
+      			color: #005daa;
+      			text-decoration: none;
+      		}
+
+      		a:hover {
+      			text-decoration: underline;
+      		}
+
+    </style>
+    <link href="https://fonts.googleapis.com/css?family=Helvetica" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.7.0/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.4/chroma.min.js"></script>
+</head>
+<body>
+
+  <h1><img src="https://static1.squarespace.com/static/5ea8f6614645d962464e58b9/t/5eec3647aafa6d35eaf15d39/1605639674053/?format=1500w" width="450"></h1>
+
+
+<!-- web map and content will go here -->
+<div id="map"></div>
+
+  <section>
+  		<h4>Cataloging Venue Closures During the Covid-19 Pandemic</h4><hr>
+      <p>"Independent music venues across the United States are in dire straits as the COVID-19 pandemic continues to keep their doors shuttered. Since March, these businesses have struggled without revenue and insufficient government assistance, while rent and insurance payments have still been due. As a result, a growing number of independent venues have been forced to shutter permanently.
+      </p>
+  		<p>Despite the fact the <a href="https://static1.squarespace.com/static/5e91157c96fe495a4baf48f2/t/5f247dd0f1862620332f0ae5/1596227025091/For+Introduction_Save+Our+Stages+Act.pdf" style="color:#269c19;" target="_blank">Save Our Stages Act</a> has already been co-sponsored by more than 140 senators and representatives, independent venues across the country are still desperately awaiting federal assistance. Meanwhile, the situation is worsening, as many amass growing debt just to stay afloat, in hopes they may continue their life's work beyond the pandemic."  <a href="https://www.billboard.com/articles/business/touring/9451748/venues-closing-coronavirus-america-list/" style="color:#269c19;" target="_blank">-<i>Billboard</i></a>
+      </p>
+  </section>
+
+<script>
+    // 1. Create a map object.
+    var mymap = L.map('map', {
+      center: [38.0, -99.3],
+      zoom: 5, //starting zoom level of the map
+      maxZoom: 18,//maximum zoom level
+      minZoom: 0,//minimum zoom level
+      detectRetina: true // detect whether the sceen is high resolution or not.
+});
+
+// 2. Add a base map.
+var CartoDB_DarkMatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+	subdomains: 'abcd',
+	maxZoom: 19
+}).addTo(mymap);
+
+// Null variable that will hold venue
+var venues = null;
+
+var colors = chroma.scale('Reds').mode('lch').colors(3);
+
+
+
+for (i = 0; i < 3; i++) {
+    $('head').append($("<style> .marker-color-" + (i + 1).toString() + " { color: " + colors[i] + "; font-size: 20px; opacity: 0.5; text-shadow: 0 0 1px #ffffff;} </style>"));
+}
+
+
+// Get GeoJSON for venues
+venues = L.geoJson.ajax("assets/venues.geojson",{
+
+  // The content of the popup window is the values of VENUE CITY STATE from the attribute table
+  onEachFeature: function (feature, layer) {
+      layer.bindPopup(feature.properties.VENUE + "<BR>" + feature.properties.CITY + ", " + feature.properties.STATE);
+  },
+
+  pointToLayer: function(feature, latlng) {
+      var id = 0;
+      return L.marker(latlng, {icon: L.divIcon({className: 'fas fa-times-circle marker-color-' + (id + 1).toString() })});
+  },
+    attribution: 'Closure Data &copy; <a href="https://www.billboard.com/articles/business/touring/9451748/venues-closing-coronavirus-america-list/" style="color:#269c19;" target="_blank">Billboard</a> | States Shapefile &copy; US Census Bureau | Base Map &copy; CartoDB | Map: Josh Platt'
+}).addTo(mymap);
+
+
+colors = chroma.scale('RdYlGn').colors(5);
+
+function setColor(density) {
+    var id = 0;
+    if (density > 4) { id = 1; }
+    else if (density > 2 && density <= 4) { id = 2; }
+    else { id = 3; }
+    return colors[id];
+}
+
+function style(feature) {
+    return {
+      fillColor: setColor(feature.properties.open),
+      fillOpacity: 0.2,
+      weight: 1,
+      opacity: .8,
+      color: 'grey',
+      dashArray: '5'
+    };
+}
+
+
+L.geoJson.ajax("assets/states.geojson", {
+    style: style
+}).addTo(mymap);
+
+
+// 9. Create Leaflet Control Object for Legend
+var legend = L.control({position: 'bottomright'});
+
+// 10. Function that runs when legend is added to map
+legend.onAdd = function () {
+
+    var div = L.DomUtil.create('div', 'legend');
+
+      div.innerHTML += '<b>Venues<b><br />';
+      div.innerHTML += '<i class="fas fa-times-circle marker-color-1"></i><p>Permanently Closed</p>';
+      div.innerHTML += '<p></p>';
+      div.innerHTML += '<p></p>';
+      div.innerHTML += '<hr><b>State Ordinances</b><br />';
+      div.innerHTML += '<i style="background: ' + colors[3] + '; opacity: 0.5"></i><p>Open</p>';
+      div.innerHTML += '<i style="background: ' + colors[2] + '; opacity: 0.5"></i><p>Open with Restrictions</p>';
+      div.innerHTML += '<i style="background: ' + colors[1] + '; opacity: 0.5"></i><p>Closed</p>';
+
+    return div;
+};
+
+// Add a legend to map
+legend.addTo(mymap);
+
+// Add a scale bar to map
+L.control.scale({position: 'topright'}).addTo(mymap);
+
+
+
+</script>
+</body>
+</html>
